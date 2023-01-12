@@ -1,35 +1,22 @@
-const { WebSocket } = require(  'ws');
+const ws = new WebSocket("ws://localhost:8080/");
 
-const ws = new WebSocket('ws://localhost:8080/');
+ws.onmessage = (e) => {
+  console.log(e.data)
+  run_command_terminal(e.data)
+};
 
-ws.on('open', function open() {
-  console.log('connected');
-  ws.send("Client connected");
-});
 
-ws.on('close', function close() {
-  console.log('disconnected');
-});
 
-ws.on('message', function message(data) {
-  run_command_terminal(data.toString())
+import { spawnSync } from "bun";
 
-});
+function run_command_terminal(string){
+    const myArray = string.split(" ");
 
-function run_command_terminal(command) {
-  const { exec } = require("child_process");
-
-  exec(command, (error, stdout, stderr) => {
-    if (error) {
-      console.log(`error: ${error.message}`);
-      return;
-    }
-    if (stderr) {
-      console.log(`stderr: ${stderr}`);
-      return;
-    }
-    console.log(`stdout: ${stdout}`);
-    return;
-  });
-
+    const { stdout } = spawnSync([myArray[0] , myArray[1]]);
+    
+    // When using spawnSync, stdout is a Buffer
+    // this lets you read from it synchronously
+    const text = stdout.toString();
+    
+    console.log(text); // "hi\n"
 }
