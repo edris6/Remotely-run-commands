@@ -1,44 +1,34 @@
-const { WebSocketServer } = require('ws');
-const express = require('express');
-const app = express();
-const wss = new WebSocketServer({ port: 8080 });
-let prev_command = null
-let command = null
-let again = false;
+let ws_ = null;
+import { file } from "bun";
+Bun.serve({
+  websocket: {
+    open(ws) {
+      console.log("Client Connected")
+      ws.subscribe("the testing");
+      if (!ws_) {
+        ws_ = ws
+      }
+    },
+    message(ws, msg) {
+      console.log("message: %s", msg);
+      const result = JSON.parse(msg)
+      console.log(JSON.parse(msg).message)
+      if (result.type == "command") {
+        if (ws_ != null) ws_.publish("the testing", String(result.message));
+      }
+    }, close(ws) {
+      console.log("Client has disconnected");
+    }, 
+  }, fetch(req, server) {
+    if (!server.upgrade(req)) {
+      console.log(req)
+      const url_div = req.url.split('/');
 
-
-const interval = setInterval(function() {
-  console.log(command)
-  console.log(prev_command)
-  if (command == null )return;
-    
-  if( command != prev_command || again == true) {
-    console.log("ran")
-    again = false
-    prev_command = command
-    wss.clients.forEach(function (client) {
-      client.send(command.toString());
-    });
-
-  }
-}, 500);
-
-wss.on('connection', function connection(ws) {
-  ws.on('message', function message(data) {
-    console.log('received: %s', data);
-  });
-  
+      if (url_div[req.url.split('/').length - 1] == "html") {
+        return new Response(file("./public/index.html"));
+      }
+      return new Response(null, { status: 404 });
+    }
+  },
+  port: 8080,
 });
-
-app.use(express.json())
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + "/public/index.html")
-})
-app.post('/upload', function (req, res) {
-    console.log("sucess")
-    console.log(req.body.message)
-    command = req.body.message
-    again = true
-});
-
-app.listen(3000)

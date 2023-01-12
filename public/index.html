@@ -13,14 +13,17 @@
     <input type="text" id="des">
     <button id="send">Send</button>
     <script>
+        const ws = new WebSocket("ws://localhost:8080/");
+
+        ws.onmessage = (e) => {
+            console.log("cuh moment")
+        };
+        ws.onopen = (e) => {
+            //console.log(e)
+        }
+
         document.querySelector("#send").addEventListener("click", () => {
-            fetch("/upload", {
-                method: "POST",
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ message: document.querySelector("#des").value })
-            })
+            ws.send(JSON.stringify({ message: document.querySelector("#des").value, type: "command" }))
         })
     </script>
 </body>
