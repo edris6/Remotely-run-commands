@@ -22,15 +22,28 @@ fn main() {
         let msg_stringed = msg.to_string();
         let msg_split = msg_stringed.split(' ').collect::<Vec<_>>();
         let mut list_dir = Command::new(format!("{}", msg_split[0]));
-        if msg_split.len() - 1 != 0{
-            let mut i = 0;
-            while i < msg_split.len() - 1{
-                list_dir.arg(msg_split[i + 1]);
-                println!("{}", msg_split[i + 1]);
-                i = i + 1;
-            }
-            
-        } 
+        if cfg!(target_os = "windows") {
+            list_dir = Command::new("cmd");
+            list_dir.arg("/C");
+            if msg_split.len() - 1 != 0{
+                let mut i = 0;
+                while i < msg_split.len(){
+                    list_dir.arg(msg_split[i]);
+                    println!("{}", msg_split[i]);
+                    i = i + 1;
+                }
+           } 
+        } else {
+            if msg_split.len() - 1 != 0{
+                let mut i = 0;
+                while i < msg_split.len() - 1{
+                    list_dir.arg(msg_split[i + 1]);
+                    println!("{}", msg_split[i + 1]);
+                    i = i + 1;
+                }
+                
+            } 
+        };
         list_dir.status().expect("process failed to execute");
         
     }
